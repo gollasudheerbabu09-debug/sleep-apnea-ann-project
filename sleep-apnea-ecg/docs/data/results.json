@@ -1,0 +1,387 @@
+{
+ "source": "original-notebooks",
+ "note": "Numbers as recorded in the original notebooks (before the fixes). Replaced by scripts/run_pipeline.py.",
+ "dataset": {
+  "records": 35,
+  "segments_raw": 17006,
+  "segments": 16862,
+  "normal": 10406,
+  "apnea": 6456,
+  "min_rr_per_minute": 30,
+  "rr_len": {
+   "min": 2,
+   "max": 111,
+   "median": 63.0,
+   "p95": 80.0,
+   "p99": 87.0
+  },
+  "per_record": [
+   {
+    "id": "a01",
+    "n_raw": 489
+   },
+   {
+    "id": "a02",
+    "n_raw": 528
+   },
+   {
+    "id": "a03",
+    "n_raw": 519
+   },
+   {
+    "id": "a04",
+    "n_raw": 492
+   },
+   {
+    "id": "a05",
+    "n_raw": 454
+   },
+   {
+    "id": "a06",
+    "n_raw": 510
+   },
+   {
+    "id": "a07",
+    "n_raw": 511
+   },
+   {
+    "id": "a08",
+    "n_raw": 501
+   },
+   {
+    "id": "a09",
+    "n_raw": 495
+   },
+   {
+    "id": "a10",
+    "n_raw": 517
+   },
+   {
+    "id": "a11",
+    "n_raw": 466
+   },
+   {
+    "id": "a12",
+    "n_raw": 577
+   },
+   {
+    "id": "a13",
+    "n_raw": 495
+   },
+   {
+    "id": "a14",
+    "n_raw": 509
+   },
+   {
+    "id": "a15",
+    "n_raw": 510
+   },
+   {
+    "id": "a16",
+    "n_raw": 482
+   },
+   {
+    "id": "a17",
+    "n_raw": 484
+   },
+   {
+    "id": "a18",
+    "n_raw": 489
+   },
+   {
+    "id": "a19",
+    "n_raw": 502
+   },
+   {
+    "id": "a20",
+    "n_raw": 510
+   },
+   {
+    "id": "b01",
+    "n_raw": 487
+   },
+   {
+    "id": "b02",
+    "n_raw": 517
+   },
+   {
+    "id": "b03",
+    "n_raw": 441
+   },
+   {
+    "id": "b04",
+    "n_raw": 426
+   },
+   {
+    "id": "b05",
+    "n_raw": 433
+   },
+   {
+    "id": "c01",
+    "n_raw": 479
+   },
+   {
+    "id": "c02",
+    "n_raw": 494
+   },
+   {
+    "id": "c03",
+    "n_raw": 454
+   },
+   {
+    "id": "c04",
+    "n_raw": 477
+   },
+   {
+    "id": "c05",
+    "n_raw": 466
+   },
+   {
+    "id": "c06",
+    "n_raw": 468
+   },
+   {
+    "id": "c07",
+    "n_raw": 429
+   },
+   {
+    "id": "c08",
+    "n_raw": 513
+   },
+   {
+    "id": "c09",
+    "n_raw": 457
+   },
+   {
+    "id": "c10",
+    "n_raw": 425
+   }
+  ],
+  "sample_rr": {
+   "record": "a01",
+   "minute": 0,
+   "label": 0,
+   "rr": [
+    0.89,
+    0.84,
+    0.83,
+    0.83,
+    0.88,
+    0.93,
+    0.98,
+    0.94,
+    0.93,
+    0.93,
+    1.01,
+    1.02,
+    1.01,
+    0.99,
+    0.97,
+    0.95,
+    0.98,
+    1.0,
+    0.95,
+    0.9,
+    0.85,
+    0.86,
+    0.97,
+    0.93,
+    0.93,
+    0.83,
+    0.78,
+    0.77,
+    0.81,
+    0.81,
+    0.84,
+    0.84,
+    0.81,
+    0.82,
+    0.9,
+    1.0,
+    0.93,
+    0.88,
+    0.86,
+    0.85,
+    0.87,
+    0.89,
+    0.91,
+    0.92,
+    0.88,
+    0.97,
+    1.0,
+    0.94,
+    0.86,
+    0.82,
+    0.83,
+    0.88,
+    0.88,
+    0.88,
+    0.92,
+    0.9,
+    0.89,
+    0.93,
+    0.9,
+    0.9,
+    0.91,
+    0.91,
+    0.88,
+    0.88,
+    0.93,
+    0.89
+   ]
+  }
+ },
+ "split": {
+  "train": [
+   "c09",
+   "a01",
+   "a05",
+   "a18",
+   "c03",
+   "a06",
+   "a12",
+   "a02",
+   "a03",
+   "c08",
+   "a04",
+   "c06",
+   "b04",
+   "c07",
+   "a11",
+   "b03",
+   "a19",
+   "c01",
+   "a07",
+   "b01",
+   "c10",
+   "a08",
+   "a15",
+   "c04"
+  ],
+  "val": [
+   "a09",
+   "a16",
+   "a13",
+   "b02",
+   "a20"
+  ],
+  "test": [
+   "c05",
+   "c02",
+   "a17",
+   "a10",
+   "b05",
+   "a14"
+  ],
+  "counts": {
+   "train": {
+    "records": 24,
+    "n": 11470,
+    "normal": 7067,
+    "apnea": 4403
+   },
+   "val": {
+    "records": 5,
+    "n": 2497,
+    "normal": 1145,
+    "apnea": 1352
+   },
+   "test": {
+    "records": 6,
+    "n": 2895,
+    "normal": 2194,
+    "apnea": 701
+   }
+  }
+ },
+ "stage1": {
+  "record": "a01",
+  "windows": 492,
+  "labels": 488,
+  "segments": 488,
+  "normal": 18,
+  "apnea": 470,
+  "params": 1161,
+  "test": {
+   "n": 98,
+   "threshold": 0.5,
+   "accuracy": 0.9796,
+   "balanced_accuracy": 0.75,
+   "auc": 1.0,
+   "cm": [
+    [
+     2,
+     2
+    ],
+    [
+     0,
+     94
+    ]
+   ],
+   "normal": {
+    "precision": 1.0,
+    "recall": 0.5,
+    "f1": 0.67,
+    "support": 4
+   },
+   "apnea": {
+    "precision": 0.98,
+    "recall": 1.0,
+    "f1": 0.99,
+    "support": 94
+   },
+   "baseline_accuracy": 0.9592
+  }
+ },
+ "stage2": {
+  "tuner": {
+   "trials": 4,
+   "epochs": 10,
+   "results": [
+    {
+     "val_auc": 0.8145,
+     "hp": {
+      "num_lstm_layers": 1,
+      "lstm_units_0": 32,
+      "lstm_activation_0": "tanh",
+      "lstm_dropout_0": 0.2,
+      "dense_units": 40,
+      "dense_activation": "tanh",
+      "learning_rate": 0.00089
+     }
+    }
+   ]
+  },
+  "best_hp": {
+   "num_lstm_layers": 1,
+   "lstm_units_0": 32,
+   "lstm_activation_0": "tanh",
+   "lstm_dropout_0": 0.2,
+   "dense_units": 40,
+   "dense_activation": "tanh",
+   "learning_rate": 0.00089
+  },
+  "params": 5713,
+  "val_auc": 0.8145,
+  "test": {
+   "n": 2895,
+   "threshold": 0.5,
+   "accuracy": 0.53,
+   "balanced_accuracy": 0.63,
+   "auc": 0.763,
+   "cm": null,
+   "normal": {
+    "precision": 0.88,
+    "recall": 0.45,
+    "f1": 0.59,
+    "support": 2194
+   },
+   "apnea": {
+    "precision": 0.32,
+    "recall": 0.81,
+    "f1": 0.46,
+    "support": 701
+   }
+  }
+ }
+}

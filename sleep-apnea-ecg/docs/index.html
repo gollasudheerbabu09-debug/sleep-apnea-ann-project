@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sleep apnea detection from a single ECG lead</title>
+<meta name="description" content="An ANN and an LSTM that detect obstructive sleep apnea, minute by minute, from heartbeat timing alone. With an honest look at why 98% accuracy was the wrong headline.">
+<meta property="og:title" content="Sleep apnea detection from a single ECG lead">
+<meta property="og:description" content="ANN to LSTM on PhysioNet Apnea-ECG, evaluated on patients the model has never seen. Try the trained model in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🫀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="bar">
+  <a class="bar-name" href="#top">Apnea&#8209;ECG</a>
+  <nav aria-label="Sections">
+    <a href="#signal">Signal</a>
+    <a href="#stage1">Stage 1</a>
+    <a href="#stage2">Stage 2</a>
+    <a href="#compare">Compare</a>
+    <a href="#demo">Try it</a>
+    <a href="#audit">Audit</a>
+    <a href="#run">Run it</a>
+  </nav>
+  <a class="bar-gh" id="repo-link" href="#run" hidden>GitHub</a>
+</header>
+
+<main id="main">
+
+<section class="hero strip" id="top">
+  <svg id="hero-trace" class="trace" aria-hidden="true"></svg>
+  <div class="hero-text">
+    <h1>Sleep apnea detection from a single ECG lead</h1>
+    <p class="lede">When breathing stops during sleep, the heart slows, then races when the sleeper half-wakes. Two neural networks learn to spot that rhythm, one minute at a time, from heartbeat timing alone.</p>
+    <p class="hero-actions">
+      <a class="btn btn-primary" href="#demo">Try the model</a>
+      <a class="btn" href="#compare">See the results</a>
+    </p>
+  </div>
+</section>
+<p class="caption hero-caption" id="hero-caption">Trace: record a01, first seconds of the night, drawn at standard ECG paper scale. Beat timing is real; the waveform shape is a template.</p>
+
+<div id="source-banner" class="banner" hidden></div>
+
+<section id="signal" class="sec">
+  <h2>The signal: time between heartbeats</h2>
+  <div class="prose">
+    <p>Diagnosing sleep apnea normally takes an overnight lab study with a dozen sensors. A single ECG lead is far cheaper, and it carries a fingerprint of apnea in its <strong>RR intervals</strong>, the time between consecutive R-peaks.</p>
+    <p>During an apnea the heart slows; when breathing resumes it speeds up. Repeated every 30 to 90 seconds, that produces a cyclic wave in the RR series. Each minute of the PhysioNet Apnea-ECG database is labelled by experts as apnea or normal, so the task is a per-minute yes/no decision.</p>
+  </div>
+  <figure class="fig wide">
+    <div class="strip strip-chart"><div id="signal-chart" class="chart"></div></div>
+    <figcaption class="caption" id="signal-caption"></figcaption>
+  </figure>
+</section>
+
+<section id="stage1" class="sec">
+  <h2>Stage 1: a small network on one patient</h2>
+  <div class="prose">
+    <p>The first model turns each minute of raw ECG into seven numbers and classifies them with a dense network of <span data-k="s1.params">1,161</span> parameters.</p>
+  </div>
+  <ol class="pipeline" aria-label="Stage 1 pipeline">
+    <li><b>Raw ECG</b><span>100 Hz, record a01, about 8 hours</span></li>
+    <li><b>60-second windows</b><span id="s1-windows">492 windows</span></li>
+    <li><b>R-peak detection</b><span><code>find_peaks</code>, 0.6 s minimum spacing</span></li>
+    <li><b>RR intervals</b><span>seconds between beats</span></li>
+    <li><b>Seven statistics</b><span>max, min, mean, median, std. deviation, kurtosis, skewness</span></li>
+    <li><b>Dense network</b><span>7, 40, 20, 1 units</span></li>
+  </ol>
+
+  <div class="result-row">
+    <div class="big-number">
+      <span class="num" id="s1-acc">97.96%</span>
+      <span class="num-label">test accuracy</span>
+    </div>
+    <div class="baseline" id="s1-baseline"></div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>Why 98% is not the real story</h3>
+      <div class="prose">
+        <p>Record a01 is a severe apnea patient: <span id="s1-classes">470 apnea minutes against 18 normal</span>. A model that answers "apnea" for every minute already scores <span id="s1-base-inline">96%</span>. The confusion matrix shows what the extra two points bought.</p>
+        <p>Three problems stack up. It is <strong>one patient</strong>, so the network may have learned one person's heart rather than apnea. The classes are <strong>badly imbalanced</strong>, so accuracy says little. And the split is <strong>random over minutes</strong>, so neighbouring minutes from the same night sit on both sides of it.</p>
+        <p>A test set with a handful of normal minutes cannot support a claim about anyone else. Recognising that is what led to Stage 2.</p>
+      </div>
+    </div>
+    <figure class="fig">
+      <div id="s1-cm"></div>
+      <figcaption class="caption">Stage 1 confusion matrix on the held-out minutes of a01.</figcaption>
+    </figure>
+  </div>
+  <figure class="fig" id="s1-history-fig" hidden>
+    <div class="strip strip-chart"><div id="s1-history" class="chart"></div></div>
+    <figcaption class="caption">Stage 1 training curves.</figcaption>
+  </figure>
+</section>
+
+<section id="stage2" class="sec">
+  <h2>Stage 2: an LSTM across 35 patients</h2>
+  <div class="prose">
+    <p>The rebuild fixes all three problems: every record in the database, no hand-made features, and a split that no patient crosses. The LSTM reads each minute's RR intervals in order, so it can learn "slow, then fast" directly, which seven summary statistics cannot express.</p>
+  </div>
+
+  <h3>The data</h3>
+  <dl class="stats" id="s2-data"></dl>
+
+  <h3>Patient-independent split</h3>
+  <div class="prose"><p>Records are divided before any minute is touched. No minute from a test patient is ever seen in training. Letters mark the database's own groups: <b>a</b> apnea, <b>b</b> borderline, <b>c</b> control.</p></div>
+  <div id="split-viz" class="split"></div>
+
+  <h3>The model</h3>
+  <div class="prose"><p>Keras Tuner searched layer count, units, activations, dropout and learning rate, scoring each configuration by validation AUC. It settled on the smallest options available: about 11,000 training sequences of a single feature do not support a bigger network.</p></div>
+  <div id="arch" class="arch" aria-label="Network architecture"></div>
+  <div id="tuner" class="table-wrap"></div>
+
+  <h3>Results on six patients the model has never seen</h3>
+  <div id="s2-threshold" class="seg" role="group" aria-label="Decision threshold" hidden></div>
+  <div class="two-col">
+    <div>
+      <dl class="stats" id="s2-metrics"></dl>
+      <div class="prose" id="s2-reading"></div>
+    </div>
+    <figure class="fig">
+      <div id="s2-cm"></div>
+      <figcaption class="caption" id="s2-cm-caption">LSTM confusion matrix on the test patients.</figcaption>
+    </figure>
+  </div>
+
+  <div class="two-col" id="s2-curves" hidden>
+    <figure class="fig">
+      <div class="strip strip-chart square"><div id="roc" class="chart"></div></div>
+      <figcaption class="caption" id="roc-caption">ROC curves on the six test patients.</figcaption>
+    </figure>
+    <figure class="fig">
+      <div class="strip strip-chart square"><div id="s2-history" class="chart"></div></div>
+      <figcaption class="caption">LSTM training and validation AUC per epoch.</figcaption>
+    </figure>
+  </div>
+
+  <div id="patients-block" hidden>
+    <h3>Patient by patient</h3>
+    <div class="prose"><p>Pooled numbers hide individuals. Clinically, what matters is the whole night: how many apnea minutes per hour of sleep. Here the model's minute-level calls are added up per patient and set against the expert labels.</p></div>
+    <div id="patients" class="table-wrap"></div>
+  </div>
+</section>
+
+<section id="compare" class="sec">
+  <h2>Side by side</h2>
+  <div class="prose"><p>The LSTM's accuracy looks worse than the ANN's 98%. It is answering a much harder question: not "can it label minutes from a night it has already seen?" but "can it label a person it has never met?" Only the second matters for screening.</p></div>
+  <div id="compare-table" class="table-wrap"></div>
+  <div class="prose" id="compare-note"></div>
+</section>
+
+<section id="demo" class="sec demo">
+  <h2>Try the model</h2>
+  <div class="prose"><p>Pick a real minute from one of the six test patients, or paste your own RR intervals in seconds. The trained networks run here in your browser; nothing is sent anywhere.</p></div>
+  <div id="demo-body"></div>
+</section>
+
+<section id="audit" class="sec">
+  <h2>Audit: what changed in the rewrite</h2>
+  <div class="prose"><p>Re-reading the original notebooks line by line turned up problems that changed the reported numbers. Each one is fixed in the pipeline and covered where possible by a test.</p></div>
+  <div class="audit">
+    <article>
+      <h3>Labels shifted by one minute</h3>
+      <p>The a01 annotation file was read with its first line treated as a header, so minute 0's label disappeared and every window was paired with the next minute's label: 488 labels instead of 489. The rewrite reads labels straight from the database's <code>.apn</code> annotations and keeps each window tied to its own minute.</p>
+    </article>
+    <article>
+      <h3>The retrained LSTM was never evaluated</h3>
+      <p>The notebook retrained <code>best_model</code> but then predicted and evaluated with a different variable, <code>model</code>. The reported 80% accuracy came from that other model, whose AUC was 0.58. Now one object is trained, evaluated, saved and exported, and the export is checked against Keras before it is written.</p>
+    </article>
+    <article>
+      <h3>Class imbalance corrected twice</h3>
+      <p>Training data was undersampled to 50/50 and then given class weights computed from the original 61/39 split, tilting the model toward "apnea" (81% recall, 32% precision). The rewrite keeps all training minutes and applies balanced class weights once.</p>
+    </article>
+    <article>
+      <h3>Smaller fixes</h3>
+      <p>The Stage 1 scaler was fit before the train/test split, so test statistics leaked into training; it is now fit on training rows only. Skipped windows could have desynchronised features and labels; indices are now kept together. The decision threshold is chosen on validation patients instead of fixed at 0.5. A fair ANN baseline (Stage 1b) now uses the same 35-patient split as the LSTM.</p>
+    </article>
+  </div>
+</section>
+
+<section id="limits" class="sec">
+  <h2>Limitations</h2>
+  <div class="prose">
+    <ul class="plain">
+      <li><b>One signal.</b> Only RR intervals are used. ECG-derived respiration from R-peak amplitude is the obvious next input.</li>
+      <li><b>Few patients.</b> 35 recordings, six in the test set. Any single number here carries wide error bars.</li>
+      <li><b>Minutes, not diagnoses.</b> Clinical diagnosis uses the apnea-hypopnea index over a whole night from a full sleep study. The per-patient roll-up is an approximation of that, not a substitute.</li>
+      <li><b>Small search.</b> The hyperparameter search covers a seven-dimensional space with a handful of trials. It finds a reasonable configuration, not the best one.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="run" class="sec">
+  <h2>Run it yourself</h2>
+  <div class="prose"><p>One script downloads the database, runs every stage, and writes the files this page reads. Commit them and the site updates.</p></div>
+  <pre class="code"><code>git clone <span id="clone-url">https://github.com/&lt;you&gt;/sleep-apnea-ecg</span>
+cd sleep-apnea-ecg
+pip install -r requirements.txt
+python scripts/run_pipeline.py          # add --quick for a 3-minute smoke test
+python -m pytest                        # fast tests, no GPU or download needed</code></pre>
+  <p class="caption">Data: PhysioNet Apnea-ECG Database (Penzel et al., 2000), via <code>wfdb</code> or the Kaggle mirror.</p>
+</section>
+
+</main>
+
+<footer class="foot">
+  <p>Research and educational project. Not a medical device and not for clinical diagnosis.</p>
+  <p id="generated"></p>
+</footer>
+
+<script id="results-fallback" type="application/json">{"source":"original-notebooks","note":"Numbers as recorded in the original notebooks (before the fixes). Replaced by scripts/run_pipeline.py.","dataset":{"records":35,"segments_raw":17006,"segments":16862,"normal":10406,"apnea":6456,"min_rr_per_minute":30,"rr_len":{"min":2,"max":111,"median":63.0,"p95":80.0,"p99":87.0},"per_record":[{"id":"a01","n_raw":489},{"id":"a02","n_raw":528},{"id":"a03","n_raw":519},{"id":"a04","n_raw":492},{"id":"a05","n_raw":454},{"id":"a06","n_raw":510},{"id":"a07","n_raw":511},{"id":"a08","n_raw":501},{"id":"a09","n_raw":495},{"id":"a10","n_raw":517},{"id":"a11","n_raw":466},{"id":"a12","n_raw":577},{"id":"a13","n_raw":495},{"id":"a14","n_raw":509},{"id":"a15","n_raw":510},{"id":"a16","n_raw":482},{"id":"a17","n_raw":484},{"id":"a18","n_raw":489},{"id":"a19","n_raw":502},{"id":"a20","n_raw":510},{"id":"b01","n_raw":487},{"id":"b02","n_raw":517},{"id":"b03","n_raw":441},{"id":"b04","n_raw":426},{"id":"b05","n_raw":433},{"id":"c01","n_raw":479},{"id":"c02","n_raw":494},{"id":"c03","n_raw":454},{"id":"c04","n_raw":477},{"id":"c05","n_raw":466},{"id":"c06","n_raw":468},{"id":"c07","n_raw":429},{"id":"c08","n_raw":513},{"id":"c09","n_raw":457},{"id":"c10","n_raw":425}],"sample_rr":{"record":"a01","minute":0,"label":0,"rr":[0.89,0.84,0.83,0.83,0.88,0.93,0.98,0.94,0.93,0.93,1.01,1.02,1.01,0.99,0.97,0.95,0.98,1.0,0.95,0.9,0.85,0.86,0.97,0.93,0.93,0.83,0.78,0.77,0.81,0.81,0.84,0.84,0.81,0.82,0.9,1.0,0.93,0.88,0.86,0.85,0.87,0.89,0.91,0.92,0.88,0.97,1.0,0.94,0.86,0.82,0.83,0.88,0.88,0.88,0.92,0.9,0.89,0.93,0.9,0.9,0.91,0.91,0.88,0.88,0.93,0.89]}},"split":{"train":["c09","a01","a05","a18","c03","a06","a12","a02","a03","c08","a04","c06","b04","c07","a11","b03","a19","c01","a07","b01","c10","a08","a15","c04"],"val":["a09","a16","a13","b02","a20"],"test":["c05","c02","a17","a10","b05","a14"],"counts":{"train":{"records":24,"n":11470,"normal":7067,"apnea":4403},"val":{"records":5,"n":2497,"normal":1145,"apnea":1352},"test":{"records":6,"n":2895,"normal":2194,"apnea":701}}},"stage1":{"record":"a01","windows":492,"labels":488,"segments":488,"normal":18,"apnea":470,"params":1161,"test":{"n":98,"threshold":0.5,"accuracy":0.9796,"balanced_accuracy":0.75,"auc":1.0,"cm":[[2,2],[0,94]],"normal":{"precision":1.0,"recall":0.5,"f1":0.67,"support":4},"apnea":{"precision":0.98,"recall":1.0,"f1":0.99,"support":94},"baseline_accuracy":0.9592}},"stage2":{"tuner":{"trials":4,"epochs":10,"results":[{"val_auc":0.8145,"hp":{"num_lstm_layers":1,"lstm_units_0":32,"lstm_activation_0":"tanh","lstm_dropout_0":0.2,"dense_units":40,"dense_activation":"tanh","learning_rate":0.00089}}]},"best_hp":{"num_lstm_layers":1,"lstm_units_0":32,"lstm_activation_0":"tanh","lstm_dropout_0":0.2,"dense_units":40,"dense_activation":"tanh","learning_rate":0.00089},"params":5713,"val_auc":0.8145,"test":{"n":2895,"threshold":0.5,"accuracy":0.53,"balanced_accuracy":0.63,"auc":0.763,"cm":null,"normal":{"precision":0.88,"recall":0.45,"f1":0.59,"support":2194},"apnea":{"precision":0.32,"recall":0.81,"f1":0.46,"support":701}}}}</script>
+<script src="js/model.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
