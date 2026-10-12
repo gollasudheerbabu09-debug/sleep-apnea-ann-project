@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/YOUR-USERNAME/sleep-apnea-ecg/actions/workflows/tests.yml/badge.svg)](https://github.com/YOUR-USERNAME/sleep-apnea-ecg/actions/workflows/tests.yml)
 
-**Live site and in-browser demo: [https://YOUR-USERNAME.github.io/sleep-apnea-ecg/**](https://gollasudheerbabu09-debug.github.io/sleep-apnea-ann-project/#run)
+**Live site and in-browser demo: (https://gollasudheerbabu09-debug.github.io/sleep-apnea-ann-project/#run)
 
 Detecting obstructive sleep apnea, minute by minute, from the timing of heartbeats alone. Built in two stages: a **feature-based ANN** on a single patient, then a **sequence-based LSTM** across 35 patients evaluated on people the model has never seen.
 
